@@ -2,41 +2,76 @@ import { useEffect, useRef } from 'react';
 import './App.css';
 import Button from './Button';
 import { ALIVE_COLOR, CELL_SIZE, DEAD_COLOR, GRID_COLOR } from './consts';
-import { memory } from "../public/pkg/game_of_life_bg.wasm"
+import init, { Game, Cell } from "../public/pkg/game_of_life"
+
 
 function App() {
+  const width = 30;
+  const height = 30;
   const canvas = useRef<HTMLCanvasElement>(null);
 
-  const width = 50;
-  const height = width;
+
+  function getIndex(row: number, col: number): number {
+    return row * width + col;
+  }
 
   useEffect(() => {
-    if (canvas.current === null) {
-      return;
-    }
+    (async () => {
+      const instance = await init();
 
-    const ctx = canvas.current.getContext("2d");
+      if (canvas.current === null) {
+        return;
+      }
 
-    if (ctx === null) {
-      return;
-    }
+      const ctx = canvas.current.getContext("2d");
 
-    ctx.beginPath();
-    ctx.strokeStyle = GRID_COLOR;
+      if (ctx === null) {
+        return;
+      }
 
-    // Vertical lines.
-    for (let i = 0; i <= width; i++) {
-      ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
-      ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
-    }
+      ctx.beginPath();
+      ctx.strokeStyle = GRID_COLOR;
 
-    // Horizontal lines.
-    for (let j = 0; j <= height; j++) {
-      ctx.moveTo(0, j * (CELL_SIZE + 1) + 1);
-      ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
-    }
+      // Vertical lines.
+      for (let i = 0; i <= width; i++) {
+        ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
+        ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
+      }
 
-    ctx.stroke();
+      // Horizontal lines.
+      for (let j = 0; j <= height; j++) {
+        ctx.moveTo(0, j * (CELL_SIZE + 1) + 1);
+        ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
+      }
+
+      ctx.stroke();
+
+      const game = Game.new(width, height);
+      const cellsPtr = game.cells();
+      const cells = new Uint8Array(instance.memory.buffer, cellsPtr, width * height);
+
+      ctx.beginPath();
+
+      for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+          const idx = getIndex(row, col);
+
+          ctx.fillStyle = cells[idx] === Cell.Dead
+            ? DEAD_COLOR
+            : ALIVE_COLOR;
+
+          ctx.fillRect(
+            col * (CELL_SIZE + 1) + 1,
+            row * (CELL_SIZE + 1) + 1,
+            CELL_SIZE,
+            CELL_SIZE
+          );
+        }
+      }
+
+      ctx.stroke();
+
+    })();
 
 
   }, [canvas.current]);
