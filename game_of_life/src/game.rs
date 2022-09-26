@@ -1,3 +1,6 @@
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, PartialEq, Copy)]
 pub enum Cell {
@@ -5,42 +8,50 @@ pub enum Cell {
     Alive,
 }
 
+#[wasm_bindgen]
 pub struct Game {
     grid: Vec<Cell>,
-    dimension: i32
+    width: u32,
+    height: u32
 }
 
 // TODO: Infinite universe with looped-over boundries
 // TODO: Color cells by their lifetime
 
+#[wasm_bindgen]
 impl Game {
-    pub fn new(dimension: i32) -> Self {
+    pub fn new(width: u32, height: u32) -> Self {
         Self {
-            grid: vec![Cell::Dead; dimension.pow(2) as usize],
-            dimension
+            grid: vec![Cell::Dead; (width * height) as usize],
+            width,
+            height,
         }
     }
 
     pub fn tick(&mut self) {
         let mut new_grid: Vec<Cell> = Vec::new();
 
-        for i in 0..self.dimension {
-            new_grid.push(self.get_next_state(i as usize)); 
+        for row in 0..self.height {
+            for col in 0..self.width {
+                new_grid.push(self.get_next_state(self.get_cell_index(row, col))); 
+            }
         }
 
-        for i in 0..self.dimension {
-            self.grid[i as usize] = new_grid[i as usize];
-        }
+        self.grid = new_grid;
     }
 
-    pub fn set_cell(&mut self, row: i32, col: i32, state: Cell) {
-        if !self.is_valid_cell(row, col) {
+    pub fn set_cell(&mut self, row: u32, col: u32, state: Cell) {
+        if !self.is_valid_cell(row as i32, col as i32) {
             return;
         }
 
         let index = self.get_cell_index(row, col);
 
         self.grid[index] = state;
+    }
+
+    pub fn cells(&self) -> *const Cell {
+        self.grid.as_ptr()
     }
     
     /// Returns the state of the cell in the next tick.
@@ -59,9 +70,9 @@ impl Game {
     }
 
     /// Returns the number of live neighbours of the cell.
-    fn get_live_neighbours(&self, index: usize) -> i32 {
-        let row = (index / (self.dimension as usize)) as i32;
-        let col = (index % (self.dimension as usize)) as i32;
+    fn get_live_neighbours(&self, index: usize) -> u32 {
+        let row = (index / (self.width as usize)) as i32;
+        let col = (index % (self.width as usize)) as i32;
 
         let mut neighbours = 0;
 
@@ -74,7 +85,7 @@ impl Game {
                     continue;
                 }
 
-                let curr_index = self.get_cell_index(curr_row, curr_col);
+                let curr_index = self.get_cell_index(curr_row as u32, curr_col as u32);
 
                 if self.grid[curr_index] == Cell::Alive && curr_index != index {
                     neighbours += 1;
@@ -85,12 +96,12 @@ impl Game {
         neighbours
     }
 
-    fn get_cell_index(&self, row: i32, col: i32) -> usize {
-        (row * self.dimension + col) as usize
+    fn get_cell_index(&self, row: u32, col: u32) -> usize {
+        (row * self.width + col) as usize
     }
 
     fn is_valid_cell(&self, row: i32, col: i32) -> bool {
-        row >= 0 && col >= 0 && row < self.dimension && col < self.dimension
+        row >= 0 && col >= 0 && row < (self.height as i32) && col < (self.width as i32)
     }
 
 }

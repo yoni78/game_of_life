@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import './App.css';
 import Button from './Button';
 import { ALIVE_COLOR, CELL_SIZE, DEAD_COLOR, GRID_COLOR } from './consts';
+import { memory } from "../public/pkg/game_of_life_bg.wasm"
 
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
