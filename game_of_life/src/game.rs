@@ -9,6 +9,16 @@ pub enum Cell {
 }
 
 #[wasm_bindgen]
+impl Cell {
+    fn toggle(&mut self) {
+        *self = match *self {
+            Cell::Dead => Cell::Alive,
+            Cell::Alive => Cell::Dead,
+        }
+    }
+}
+
+#[wasm_bindgen]
 pub struct Game {
     grid: Vec<Cell>,
     width: u32,
@@ -40,14 +50,14 @@ impl Game {
         self.grid = new_grid;
     }
 
-    pub fn set_cell(&mut self, row: u32, col: u32, state: Cell) {
+    pub fn toggle_cell(&mut self, row: u32, col: u32) {
         if !self.is_valid_cell(row as i32, col as i32) {
             return;
         }
 
         let index = self.get_cell_index(row, col);
 
-        self.grid[index] = state;
+        self.grid[index].toggle();
     }
 
     pub fn cells(&self) -> *const Cell {
