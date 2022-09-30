@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 import Button from './Button';
-import { CELL_COLORS, CELL_SIZE, GRID_COLOR } from './consts';
-import init, { Game, Cell, CellState } from "../public/pkg/game_of_life"
+import { CELL_COLORS, CELL_SIZE, DEAD_CELL_COLOR, GRID_COLOR } from './consts';
+import init, { Game } from "../public/pkg/game_of_life"
 
 
 function App() {
@@ -13,8 +13,8 @@ function App() {
 
   const [running, setRunning] = useState<boolean>(false);
 
-  const width = 35;
-  const height = 35;
+  const width = 100;
+  const height = 60;
 
   function getIndex(row: number, col: number): number {
     return row * width + col;
@@ -39,7 +39,7 @@ function App() {
     ctx.stroke();
   }
 
-  function drawCells(ctx: CanvasRenderingContext2D, cells: Uint8Array): void {
+  function drawCells(ctx: CanvasRenderingContext2D, cells: Uint32Array): void {
     ctx.beginPath();
 
     for (let row = 0; row < height; row++) {
@@ -47,8 +47,15 @@ function App() {
         const idx = getIndex(row, col);
 
         ctx.fillStyle = cells[idx] === 0
-          ? CELL_COLORS[0]
-          : CELL_COLORS[Math.log2(cells[idx])];
+          ? DEAD_CELL_COLOR
+          : CELL_COLORS[Math.floor(Math.log2(cells[idx]))];
+
+        if (idx === 4) {
+          console.log(cells[idx]);
+
+          console.log(ctx.fillStyle);
+        }
+
 
         ctx.fillRect(
           col * (CELL_SIZE + 1) + 1,
@@ -62,10 +69,10 @@ function App() {
     ctx.stroke();
   }
 
-  function getCells(): Uint8Array {
+  function getCells(): Uint32Array {
     const cellsPtr = game.current!.cells();
 
-    return new Uint8Array(memory.current!.buffer, cellsPtr, width * height);
+    return new Uint32Array(memory.current!.buffer, cellsPtr, width * height);
   }
 
   function renderLoop(): void {
@@ -93,6 +100,12 @@ function App() {
       return;
     }
 
+    const ctx = canvas.current?.getContext('2d');
+
+    if (ctx === null || memory.current === null || game.current === null) {
+      return;
+    }
+
     const boundingRect = canvas.current.getBoundingClientRect();
 
     const scaleX = canvas.current.width / boundingRect.width;
@@ -104,17 +117,18 @@ function App() {
     const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
     const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
 
+    console.log(row);
+    console.log(col);
+
+    console.log(getCells());
+
     game.current?.toggle_cell(row, col);
-
-    const ctx = canvas.current?.getContext('2d');
-
-    if (ctx === null || memory.current === null || game.current === null) {
-      return;
-    }
 
     const cells = getCells();
 
-    drawGrid(ctx);
+    console.log(cells);
+
+
     drawCells(ctx, cells);
   }
 

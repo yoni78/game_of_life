@@ -195,4 +195,18 @@ mod tests {
         assert!(!game.is_cell_alive(cell_index)); 
     }
 
+    #[test]
+    fn test_toggle_cell() {
+        let mut game = Game::new(3, 3);
+        let cell_index = game.get_cell_index(1, 1);
+
+        game.toggle_cell(1, 1);
+
+        assert_eq!(game.grid[cell_index], 1);
+
+        game.toggle_cell(1, 1);
+
+        assert_eq!(game.grid[cell_index], 0);
+    }
+
 }
