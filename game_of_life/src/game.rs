@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
 #[repr(u8)]
-#[derive(Clone, PartialEq, Copy)]
+#[derive(Clone, PartialEq, Copy, Debug)]
 pub enum Cell {
     Dead,
     Alive,
@@ -86,14 +86,10 @@ impl Game {
 
         let mut neighbours = 0;
 
-        for row_diff in -1..1 {
-            for col_diff in -1..1 {
-                let curr_row = row + row_diff;
-                let curr_col = col + col_diff;
-
-                if !self.is_valid_cell(curr_row, curr_col) {
-                    continue;
-                }
+        for row_diff in -1..2 {
+            for col_diff in -1..2 {
+                let curr_row = (row + row_diff).rem_euclid(self.height as i32);
+                let curr_col = (col + col_diff).rem_euclid(self.width as i32);
 
                 let curr_index = self.get_cell_index(curr_row as u32, curr_col as u32);
 
@@ -112,6 +108,110 @@ impl Game {
 
     fn is_valid_cell(&self, row: i32, col: i32) -> bool {
         row >= 0 && col >= 0 && row < (self.height as i32) && col < (self.width as i32)
+    }
+
+}
+
+impl Game {
+    /// Get the dead and alive values of the entire universe.
+    pub fn get_cells(&self) -> &[Cell] {
+        &self.grid
+    }
+
+    /// Set cells to be alive in a universe by passing the row and column
+    /// of each cell as an array.
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_cell_index(row, col);
+            self.grid[idx] = Cell::Alive;
+        }
+    }
+
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_cell_index() {
+        let game = Game::new(10, 10);
+        let cell_index = game.get_cell_index(9, 9);
+
+        assert_eq!(cell_index, 99); 
+    }
+
+    #[test]
+    fn test_count_live_neighbours_without_loop() {
+        let mut game = Game::new(3, 3);
+        
+        game.set_cells(&[(0, 0), (1, 1), (2, 2)]);
+
+        let actual_live_neighbours = game.get_live_neighbours(game.get_cell_index(1, 1));
+
+        assert_eq!(actual_live_neighbours, 2); 
+    }
+
+    
+    #[test]
+    fn test_get_next_state_dead_to_alive() {
+        let mut game = Game::new(3, 3);
+        game.set_cells(&[(0, 1), (0, 2), (2, 1)]);
+
+        let cell_index = game.get_cell_index(1, 1);
+
+        assert_eq!(game.get_next_state(cell_index), Cell::Alive); 
+    }
+
+    #[test]
+    fn test_get_next_state_dead_to_dead_under() {
+        let mut game = Game::new(3, 3);
+        game.set_cells(&[(0, 1), (2, 1)]);
+
+        let cell_index = game.get_cell_index(1, 1);
+
+        assert_eq!(game.get_next_state(cell_index), Cell::Dead); 
+    }
+
+    #[test]
+    fn test_get_next_state_dead_to_dead_over() {
+        let mut game = Game::new(3, 3);
+        game.set_cells(&[(0, 1), (0, 2), (2, 1), (2, 2)]);
+
+        let cell_index = game.get_cell_index(1, 1);
+
+        assert_eq!(game.get_next_state(cell_index), Cell::Dead); 
+    }
+
+    #[test]
+    fn test_get_next_state_alive_to_alive() {
+        let mut game = Game::new(3, 3);
+        game.set_cells(&[(0, 1), (0, 2), (1, 1), (2, 2)]);
+
+        let cell_index = game.get_cell_index(1, 1);
+
+        assert_eq!(game.get_next_state(cell_index), Cell::Alive); 
+    }
+
+    #[test]
+    fn test_get_next_state_alive_to_dead_under() {
+        let mut game = Game::new(3, 3);
+        game.set_cells(&[(1, 1), (2, 2)]);
+
+        let cell_index = game.get_cell_index(1, 1);
+
+        assert_eq!(game.get_next_state(cell_index), Cell::Dead); 
+    }
+
+    
+    #[test]
+    fn test_get_next_state_alive_to_dead_over() {
+        let mut game = Game::new(3, 3);
+        game.set_cells(&[(0, 1), (0, 2), (1, 1), (2, 2), (2, 1)]);
+
+        let cell_index = game.get_cell_index(1, 1);
+
+        assert_eq!(game.get_next_state(cell_index), Cell::Dead); 
     }
 
 }

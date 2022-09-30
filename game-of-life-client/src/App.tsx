@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 import Button from './Button';
 import { ALIVE_COLOR, CELL_SIZE, DEAD_COLOR, GRID_COLOR } from './consts';
@@ -13,8 +13,8 @@ function App() {
 
   const [running, setRunning] = useState<boolean>(false);
 
-  const width = 30;
-  const height = 30;
+  const width = 5;
+  const height = 5;
 
   function getIndex(row: number, col: number): number {
     return row * width + col;
