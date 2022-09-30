@@ -117,17 +117,9 @@ function App() {
     const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
     const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
 
-    console.log(row);
-    console.log(col);
-
-    console.log(getCells());
-
     game.current?.toggle_cell(row, col);
 
     const cells = getCells();
-
-    console.log(cells);
-
 
     drawCells(ctx, cells);
   }
