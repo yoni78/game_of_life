@@ -11,7 +11,6 @@ function App() {
   const memory = useRef<WebAssembly.Memory | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
-
   const [running, setRunning] = useState<boolean>(false);
 
   const width = 35;
