@@ -2,40 +2,8 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use std::cmp;
 
 #[wasm_bindgen]
-#[repr(u8)]
-#[derive(Clone, PartialEq, Copy, Debug)]
-pub enum CellState {
-    Dead,
-    Alive,
-}
-
-#[wasm_bindgen]
-#[derive(Clone, PartialEq, Copy, Debug)]
-pub struct Cell {
-    pub state: CellState,
-    lifetime: u32
-}
-
-#[wasm_bindgen]
-impl Cell {
-    pub fn new(state: CellState) -> Self {
-        Self {
-            state,
-            lifetime: 0
-        }
-    }
-
-    fn toggle(&mut self) {
-        self.state = match self.state {
-            CellState::Dead => CellState::Alive,
-            CellState::Alive => CellState::Dead,
-        }
-    }
-}
-
-#[wasm_bindgen]
 pub struct Game {
-    grid: Vec<Cell>,
+    grid: Vec<u32>,
     width: u32,
     height: u32
 }
@@ -44,23 +12,23 @@ pub struct Game {
 impl Game {
     pub fn new(width: u32, height: u32) -> Self {
         Self {
-            grid: vec![Cell::new(CellState::Dead); (width * height) as usize],
+            grid: vec![0; (width * height) as usize],
             width,
             height,
         }
     }
 
     pub fn tick(&mut self) {
-        let mut new_grid: Vec<Cell> = Vec::new();
+        let mut new_grid: Vec<u32> = Vec::new();
 
         for row in 0..self.height {
             for col in 0..self.width {
                 let index = self.get_cell_index(row, col);
+                let is_alive = self.is_cell_alive(index);
 
-                let mut new_cell = Cell::new(self.get_next_state(index));
-                new_cell.lifetime = cmp::min(self.grid[index].lifetime + 1, 256);
+                let lifetime = if is_alive { cmp::min(self.grid[index] + 1, 256) } else { 0 };
 
-                new_grid.push(new_cell); 
+                new_grid.push(lifetime); 
             }
         }
 
@@ -74,25 +42,20 @@ impl Game {
 
         let index = self.get_cell_index(row, col);
 
-        self.grid[index].toggle();
+        self.grid[index] = if self.grid[index] == 0 { 1 } else { 0 }
     }
 
-    pub fn cells(&self) -> *const Cell {
+    pub fn cells(&self) -> *const u32 {
         self.grid.as_ptr()
     }
     
     /// Returns the state of the cell in the next tick.
-    fn get_next_state(&self, index: usize) -> CellState {
+    fn is_cell_alive(&self, index: usize) -> bool {
         let neigbours_count = self.get_live_neighbours(index);
 
-        match self.grid[index].state {
-            CellState::Alive => {
-                return if neigbours_count == 2 || neigbours_count == 3 { CellState::Alive } else { CellState::Dead };
-            },
-
-            CellState::Dead => {
-                return if neigbours_count == 3 { CellState::Alive } else { CellState::Dead };
-            },
+        match self.grid[index] {
+            0 => return neigbours_count == 3,
+            _ => return neigbours_count == 2 || neigbours_count == 3
         }
     }
 
@@ -110,7 +73,7 @@ impl Game {
 
                 let curr_index = self.get_cell_index(curr_row as u32, curr_col as u32);
 
-                if self.grid[curr_index].state == CellState::Alive && curr_index != index {
+                if self.grid[curr_index] > 0 && curr_index != index {
                     neighbours += 1;
                 }
             }
@@ -131,7 +94,7 @@ impl Game {
 
 impl Game {
     /// Get the dead and alive values of the entire universe.
-    pub fn get_cells(&self) -> &[Cell] {
+    pub fn get_cells(&self) -> &[u32] {
         &self.grid
     }
 
@@ -140,7 +103,8 @@ impl Game {
     pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
         for (row, col) in cells.iter().cloned() {
             let idx = self.get_cell_index(row, col);
-            self.grid[idx].state = CellState::Alive;
+
+            self.grid[idx] = 1;
         }
     }
 
@@ -177,7 +141,7 @@ mod tests {
 
         let cell_index = game.get_cell_index(1, 1);
 
-        assert_eq!(game.get_next_state(cell_index), CellState::Alive); 
+        assert!(game.is_cell_alive(cell_index)); 
     }
 
     #[test]
@@ -187,7 +151,7 @@ mod tests {
 
         let cell_index = game.get_cell_index(1, 1);
 
-        assert_eq!(game.get_next_state(cell_index), CellState::Dead); 
+        assert!(!game.is_cell_alive(cell_index)); 
     }
 
     #[test]
@@ -197,7 +161,7 @@ mod tests {
 
         let cell_index = game.get_cell_index(1, 1);
 
-        assert_eq!(game.get_next_state(cell_index), CellState::Dead); 
+        assert!(!game.is_cell_alive(cell_index)); 
     }
 
     #[test]
@@ -207,7 +171,7 @@ mod tests {
 
         let cell_index = game.get_cell_index(1, 1);
 
-        assert_eq!(game.get_next_state(cell_index), CellState::Alive); 
+        assert!(game.is_cell_alive(cell_index)); 
     }
 
     #[test]
@@ -217,7 +181,7 @@ mod tests {
 
         let cell_index = game.get_cell_index(1, 1);
 
-        assert_eq!(game.get_next_state(cell_index), CellState::Dead); 
+        assert!(!game.is_cell_alive(cell_index)); 
     }
 
     
@@ -228,7 +192,7 @@ mod tests {
 
         let cell_index = game.get_cell_index(1, 1);
 
-        assert_eq!(game.get_next_state(cell_index), CellState::Dead); 
+        assert!(!game.is_cell_alive(cell_index)); 
     }
 
 }

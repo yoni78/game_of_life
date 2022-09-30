@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 import Button from './Button';
-import { ALIVE_COLOR, CELL_SIZE, DEAD_COLOR, GRID_COLOR } from './consts';
-import init, { Game, Cell } from "../public/pkg/game_of_life"
+import { CELL_COLORS, CELL_SIZE, GRID_COLOR } from './consts';
+import init, { Game, Cell, CellState } from "../public/pkg/game_of_life"
 
 
 function App() {
@@ -46,9 +46,9 @@ function App() {
       for (let col = 0; col < width; col++) {
         const idx = getIndex(row, col);
 
-        ctx.fillStyle = cells[idx] === Cell.Dead
-          ? DEAD_COLOR
-          : ALIVE_COLOR;
+        ctx.fillStyle = cells[idx] === 0
+          ? CELL_COLORS[0]
+          : CELL_COLORS[Math.log2(cells[idx])];
 
         ctx.fillRect(
           col * (CELL_SIZE + 1) + 1,
@@ -160,7 +160,6 @@ function App() {
     }
 
   }, []);
-
 
   return (
     <div className="App">

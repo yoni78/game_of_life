@@ -31,7 +31,7 @@ pub fn test_tick() {
     let expected_cells = expected_game.get_cells();
 
     for i in 0..input_cells.len() {
-        assert_eq!(input_cells[i].state, expected_cells[i].state);
+        assert_eq!(input_cells[i] > 0, expected_cells[i] > 0);
     }
 }
 
