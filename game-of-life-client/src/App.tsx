@@ -9,12 +9,13 @@ function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const game = useRef<Game | null>(null);
   const memory = useRef<WebAssembly.Memory | null>(null);
-  const animationRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+
 
   const [running, setRunning] = useState<boolean>(false);
 
-  const width = 5;
-  const height = 5;
+  const width = 35;
+  const height = 35;
 
   function getIndex(row: number, col: number): number {
     return row * width + col;
@@ -79,14 +80,13 @@ function App() {
       return;
     }
 
-    const cells = getCells();
-
-    drawGrid(ctx);
-    drawCells(ctx, cells);
-
     game.current.tick();
 
-    setTimeout(() => animationRef.current = requestAnimationFrame(renderLoop), 1000);
+    const cells = getCells();
+
+    drawCells(ctx, cells);
+
+    timeoutRef.current = setTimeout(renderLoop, 200);
   }
 
   function handleCellClicked(event: React.MouseEvent<HTMLCanvasElement>) {
@@ -124,6 +124,9 @@ function App() {
 
     if (newRunning) {
       renderLoop();
+
+    } else if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
     }
 
     setRunning(!running);
@@ -150,14 +153,14 @@ function App() {
     })();
 
     return () => {
-      if (animationRef.current === null) {
+      if (timeoutRef.current === null) {
         return;
       }
 
-      cancelAnimationFrame(animationRef.current);
+      clearTimeout(timeoutRef.current);
     }
 
-  }, [canvas.current]);
+  }, []);
 
 
   return (
