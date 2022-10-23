@@ -1,6 +1,7 @@
 import init, { Game } from "game_of_life";
 import { useRef, useState, useEffect } from "react";
 import { GRID_COLOR, CELL_SIZE, DEAD_CELL_COLOR, CELL_COLORS, LIVE_CELL_COLOR } from "../consts";
+import { useDimensions } from "./useDimensions";
 
 export function useGame() {
     const canvas = useRef<HTMLCanvasElement>(null);
@@ -14,8 +15,7 @@ export function useGame() {
     const colorRef = useRef<boolean>(color);
     colorRef.current = color;
 
-    const width = 120;
-    const height = 60;
+    const { height, width } = useDimensions();
 
     useEffect(() => {
         (async () => {
@@ -46,7 +46,7 @@ export function useGame() {
             clearTimeout(timeoutRef.current);
         }
 
-    }, []);
+    }, [height, width]);
 
     function getIndex(row: number, col: number): number {
         return row * width + col;
