@@ -13,7 +13,10 @@ function App() {
     handleCellClicked,
     handleClearClicked,
     handleColorChanged,
-    handleStartStopClicked
+    handleStartStopClicked,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp
   } = useGame();
 
   return (
@@ -25,7 +28,14 @@ function App() {
       </div>
 
       <div className='flex justify-center'>
-        <GameGrid canvasRef={canvas} height={height} width={width} handleCellClicked={handleCellClicked} />
+        <GameGrid
+          canvasRef={canvas}
+          height={height}
+          width={width}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+        />
       </div>
 
       <div className='flex justify-center'>

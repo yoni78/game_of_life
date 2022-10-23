@@ -11,6 +11,8 @@ export function useGame() {
 
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [color, setColor] = useState<boolean>(true);
+    const [mouseDown, setMouseDown] = useState(false);
+    const [lastCellChanged, setLastCellChanged] = useState({ row: -1, col: -1 });
 
     const colorRef = useRef<boolean>(color);
     colorRef.current = color;
@@ -147,9 +149,41 @@ export function useGame() {
         const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
         const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
 
+        setLastCellChanged({ row, col });
+
+        if (mouseDown) {
+            if (row === lastCellChanged.row && col === lastCellChanged.col) {
+                return;
+            }
+
+            const cells = getCells();
+            const index = getIndex(row, col);
+
+            if (cells[index] > 0) {
+                return;
+            }
+        }
+
         game.current?.toggle_cell(row, col);
 
         redrawCells();
+    }
+
+    function handleMouseDown(event: React.MouseEvent<HTMLCanvasElement>) {
+        setMouseDown(true);
+        handleCellClicked(event);
+    }
+
+    function handleMouseUp() {
+        setMouseDown(false);
+    }
+
+    function handleMouseMove(event: React.MouseEvent<HTMLCanvasElement>) {
+        if (!mouseDown) {
+            return;
+        }
+
+        handleCellClicked(event);
     }
 
     function handleStartStopClicked() {
@@ -187,6 +221,9 @@ export function useGame() {
         handleStartStopClicked,
         handleClearClicked,
         handleColorChanged,
-        handleCellClicked
+        handleCellClicked,
+        handleMouseDown,
+        handleMouseUp,
+        handleMouseMove
     }
 }
