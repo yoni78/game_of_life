@@ -48,6 +48,16 @@ impl Game {
     pub fn cells(&self) -> *const u32 {
         self.grid.as_ptr()
     }
+
+    pub fn clear_grid(&mut self) {
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let index = self.get_cell_index(row, col);
+
+                self.grid[index] = 0;
+            }
+        }
+    }
     
     /// Returns the state of the cell in the next tick.
     fn is_cell_alive(&self, index: usize) -> bool {
@@ -207,6 +217,23 @@ mod tests {
         game.toggle_cell(1, 1);
 
         assert_eq!(game.grid[cell_index], 0);
+    }
+
+    #[test]
+    fn clear_grid_test() {
+        let mut game = Game::new(3, 3);
+
+        game.toggle_cell(1, 1);
+        game.toggle_cell(0, 0);
+        game.toggle_cell(2, 0);
+
+        game.clear_grid();
+
+        for row in 0..game.height {
+            for col in 0..game.width {
+                assert_eq!(game.grid[game.get_cell_index(row, col)], 0);
+            }
+        }
     }
 
 }

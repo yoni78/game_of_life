@@ -97,6 +97,22 @@ function App() {
     ctx.stroke();
   }
 
+  function redrawCells() {
+    if (canvas.current === null) {
+      return;
+    }
+
+    const ctx = canvas.current?.getContext('2d');
+
+    if (ctx === null || memory.current === null || game.current === null) {
+      return;
+    }
+
+    const cells = getCells();
+
+    drawCells(ctx, cells, color);
+  }
+
   function getCells(): Uint32Array {
     const cellsPtr = game.current!.cells();
 
@@ -128,12 +144,6 @@ function App() {
       return;
     }
 
-    const ctx = canvas.current?.getContext('2d');
-
-    if (ctx === null || memory.current === null || game.current === null) {
-      return;
-    }
-
     const boundingRect = canvas.current.getBoundingClientRect();
 
     const scaleX = canvas.current.width / boundingRect.width;
@@ -147,9 +157,7 @@ function App() {
 
     game.current?.toggle_cell(row, col);
 
-    const cells = getCells();
-
-    drawCells(ctx, cells, color);
+    redrawCells();
   }
 
   function handleStartStopClicked() {
@@ -165,6 +173,12 @@ function App() {
     setIsRunning(!isRunning);
   }
 
+  function handleClearClicked() {
+    game.current?.clear_grid();
+
+    redrawCells();
+  }
+
   function handleColorChanged() {
     setColor(!color);
   }
@@ -177,6 +191,8 @@ function App() {
 
       <div className="controls">
         <Button text={isRunning ? 'Stop' : 'Start'} onClick={handleStartStopClicked} />
+        <Button text={'Clear'} onClick={handleClearClicked} />
+
         <Checkbox isChecked={color} onChange={handleColorChanged} />
       </div>
     </div>
