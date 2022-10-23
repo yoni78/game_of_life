@@ -11,6 +11,13 @@ export function useDimensions() {
     }
 
     useEffect(() => {
+        const isMobile = window.matchMedia('(max-width: 700px)').matches;
+
+        // Ignore resizes on mobile
+        if (isMobile) {
+            return;
+        }
+
         window.addEventListener('resize', handleResize);
     }, []);
 

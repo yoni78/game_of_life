@@ -10,7 +10,6 @@ function App() {
     canvas,
     height,
     width,
-    handleCellClicked,
     handleClearClicked,
     handleColorChanged,
     handleStartStopClicked,
