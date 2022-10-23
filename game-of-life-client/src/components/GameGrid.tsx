@@ -9,7 +9,7 @@ interface Props {
 }
 function GameGrid({ canvasRef, height, width, handleCellClicked }: Props) {
     return (
-        <canvas ref={canvasRef} className='game' height={(CELL_SIZE + 1) * (height + 1)} width={(CELL_SIZE + 1) * (width + 1)} onClick={handleCellClicked} />
+        <canvas ref={canvasRef} className='cursor-pointer' height={(CELL_SIZE + 1) * (height + 1)} width={(CELL_SIZE + 1) * (width + 1)} onClick={handleCellClicked} />
     )
 }
 

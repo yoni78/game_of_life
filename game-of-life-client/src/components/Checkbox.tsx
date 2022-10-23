@@ -1,14 +1,15 @@
 interface Props {
   isChecked: boolean
+  className?: string
   onChange: () => void
 }
 
-function Checkbox({ isChecked, onChange }: Props) {
+function Checkbox({ isChecked, className = "", onChange }: Props) {
   return (
-    <input type="checkbox" className="
+    <input type="checkbox" className={`
         rounded
         border-gray-300
-        text-purple-700
+        text-sky-600
         shadow-sm
         focus:border-indigo-300
         focus:ring
@@ -18,7 +19,8 @@ function Checkbox({ isChecked, onChange }: Props) {
         cursor-pointer
         w-5
         h-5
-      "
+        ${className}`}
+
       checked={isChecked}
       onChange={onChange}
     />
