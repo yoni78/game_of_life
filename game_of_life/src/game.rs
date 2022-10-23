@@ -26,7 +26,7 @@ impl Game {
                 let index = self.get_cell_index(row, col);
                 let is_alive = self.is_cell_alive(index);
 
-                let lifetime = if is_alive { cmp::min(self.grid[index] + 1, 256) } else { 0 };
+                let lifetime = if is_alive { cmp::min(self.grid[index] + 1, 255) } else { 0 };
 
                 new_grid.push(lifetime); 
             }
