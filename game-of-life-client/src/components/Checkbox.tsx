@@ -16,6 +16,8 @@ function Checkbox({ isChecked, onChange }: Props) {
         focus:ring-indigo-200
         focus:ring-opacity-50
         cursor-pointer
+        w-5
+        h-5
       "
       checked={isChecked}
       onChange={onChange}

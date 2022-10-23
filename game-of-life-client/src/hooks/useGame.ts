@@ -11,8 +11,11 @@ export function useGame() {
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [color, setColor] = useState<boolean>(true);
 
-    const width = 150;
-    const height = 80;
+    const colorRef = useRef<boolean>(color);
+    colorRef.current = color;
+
+    const width = 120;
+    const height = 60;
 
     useEffect(() => {
         (async () => {
@@ -32,6 +35,7 @@ export function useGame() {
             memory.current = instance.memory;
 
             drawGrid(ctx);
+            redrawCells();
         })();
 
         return () => {
@@ -67,7 +71,7 @@ export function useGame() {
         ctx.stroke();
     }
 
-    function drawCells(ctx: CanvasRenderingContext2D, cells: Uint32Array, color: boolean): void {
+    function drawCells(ctx: CanvasRenderingContext2D, cells: Uint32Array): void {
         ctx.beginPath();
 
         for (let row = 0; row < height; row++) {
@@ -78,7 +82,7 @@ export function useGame() {
                     ctx.fillStyle = DEAD_CELL_COLOR;
 
                 } else {
-                    ctx.fillStyle = color ? CELL_COLORS[Math.floor(Math.log2(cells[idx]))] : LIVE_CELL_COLOR;
+                    ctx.fillStyle = colorRef.current ? CELL_COLORS[Math.floor(Math.log2(cells[idx]))] : LIVE_CELL_COLOR;
                 }
 
                 ctx.fillRect(
@@ -106,7 +110,7 @@ export function useGame() {
 
         const cells = getCells();
 
-        drawCells(ctx, cells, color);
+        drawCells(ctx, cells);
     }
 
     function getCells(): Uint32Array {
@@ -116,23 +120,15 @@ export function useGame() {
     }
 
     function renderLoop(): void {
-        if (game.current === null || canvas.current === null || memory.current == null) {
-            return;
-        }
-
-        const ctx = canvas.current.getContext('2d');
-
-        if (ctx === null) {
+        if (game.current === null) {
             return;
         }
 
         game.current.tick();
 
-        const cells = getCells();
+        redrawCells();
 
-        drawCells(ctx, cells, color);
-
-        timeoutRef.current = setTimeout(renderLoop, 200);
+        timeoutRef.current = setTimeout(() => renderLoop(), 200);
     }
 
     function handleCellClicked(event: React.MouseEvent<HTMLCanvasElement>) {
@@ -177,6 +173,9 @@ export function useGame() {
 
     function handleColorChanged() {
         setColor(!color);
+        colorRef.current = !color;
+
+        redrawCells();
     }
 
     return {
