@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 import Button from './Button';
-import { CELL_COLORS, CELL_SIZE, DEAD_CELL_COLOR, GRID_COLOR } from './consts';
+import { CELL_COLORS, CELL_SIZE, DEAD_CELL_COLOR, GRID_COLOR, LIVE_CELL_COLOR } from './consts';
 import init, { Game } from "../public/pkg/game_of_life"
+import Checkbox from './Checkbox';
 
 
 function App() {
@@ -11,10 +12,41 @@ function App() {
   const memory = useRef<WebAssembly.Memory | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
-  const [running, setRunning] = useState<boolean>(false);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [color, setColor] = useState<boolean>(true);
 
   const width = 100;
   const height = 60;
+
+  useEffect(() => {
+    (async () => {
+      const instance = await init();
+
+      if (canvas.current === null) {
+        return;
+      }
+
+      const ctx = canvas.current.getContext("2d");
+
+      if (ctx === null) {
+        return;
+      }
+
+      game.current = Game.new(width, height);
+      memory.current = instance.memory;
+
+      drawGrid(ctx);
+    })();
+
+    return () => {
+      if (timeoutRef.current === null) {
+        return;
+      }
+
+      clearTimeout(timeoutRef.current);
+    }
+
+  }, []);
 
   function getIndex(row: number, col: number): number {
     return row * width + col;
@@ -39,23 +71,19 @@ function App() {
     ctx.stroke();
   }
 
-  function drawCells(ctx: CanvasRenderingContext2D, cells: Uint32Array): void {
+  function drawCells(ctx: CanvasRenderingContext2D, cells: Uint32Array, color: boolean): void {
     ctx.beginPath();
 
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
         const idx = getIndex(row, col);
 
-        ctx.fillStyle = cells[idx] === 0
-          ? DEAD_CELL_COLOR
-          : CELL_COLORS[Math.floor(Math.log2(cells[idx]))];
+        if (cells[idx] === 0) {
+          ctx.fillStyle = DEAD_CELL_COLOR;
 
-        if (idx === 4) {
-          console.log(cells[idx]);
-
-          console.log(ctx.fillStyle);
+        } else {
+          ctx.fillStyle = color ? CELL_COLORS[Math.floor(Math.log2(cells[idx]))] : LIVE_CELL_COLOR;
         }
-
 
         ctx.fillRect(
           col * (CELL_SIZE + 1) + 1,
@@ -90,7 +118,7 @@ function App() {
 
     const cells = getCells();
 
-    drawCells(ctx, cells);
+    drawCells(ctx, cells, color);
 
     timeoutRef.current = setTimeout(renderLoop, 200);
   }
@@ -121,11 +149,11 @@ function App() {
 
     const cells = getCells();
 
-    drawCells(ctx, cells);
+    drawCells(ctx, cells, color);
   }
 
   function handleStartStopClicked() {
-    const newRunning = !running;
+    const newRunning = !isRunning;
 
     if (newRunning) {
       renderLoop();
@@ -134,38 +162,12 @@ function App() {
       clearTimeout(timeoutRef.current);
     }
 
-    setRunning(!running);
+    setIsRunning(!isRunning);
   }
 
-  useEffect(() => {
-    (async () => {
-      const instance = await init();
-
-      if (canvas.current === null) {
-        return;
-      }
-
-      const ctx = canvas.current.getContext("2d");
-
-      if (ctx === null) {
-        return;
-      }
-
-      game.current = Game.new(width, height);
-      memory.current = instance.memory;
-
-      drawGrid(ctx);
-    })();
-
-    return () => {
-      if (timeoutRef.current === null) {
-        return;
-      }
-
-      clearTimeout(timeoutRef.current);
-    }
-
-  }, []);
+  function handleColorChanged() {
+    setColor(!color);
+  }
 
   return (
     <div className="App">
@@ -174,7 +176,8 @@ function App() {
       </div>
 
       <div className="controls">
-        <Button text={running ? 'Stop' : 'Start'} onClick={handleStartStopClicked} />
+        <Button text={isRunning ? 'Stop' : 'Start'} onClick={handleStartStopClicked} />
+        <Checkbox isChecked={color} onChange={handleColorChanged} />
       </div>
     </div>
   )
